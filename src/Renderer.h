@@ -3,10 +3,16 @@
 #include "Device.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
+#define VK_USE_PLATFORM_WIN32_KHR
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 
 struct RendererInfo {
     bool enableValidationLayers;
     const std::vector<const char*>& validationLayers;
+    GLFWwindow* window;
 };
 
 class Renderer {
@@ -34,4 +40,5 @@ private:
     std::unique_ptr<vk::raii::Context> context;
     std::unique_ptr<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
     std::unique_ptr<Device> device;
+    std::unique_ptr<vk::raii::SurfaceKHR> surface;
 };

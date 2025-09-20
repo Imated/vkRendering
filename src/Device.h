@@ -8,13 +8,13 @@ struct QueueFamilyIndices {
     std::optional<uint32_t> presentFamily;
 
     bool isComplete() const {
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
 class Device {
 public:
-    Device(const vk::raii::Instance& instance);
+    Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface);
 
     vk::raii::PhysicalDevice& getPhysicalDevice() const;
     vk::raii::Device& getDevice() const;
@@ -25,7 +25,9 @@ private:
 
     std::unique_ptr<vk::raii::PhysicalDevice> physicalDevice;
     std::unique_ptr<vk::raii::Device> logicalDevice;
+    vk::raii::SurfaceKHR& surface;
     QueueFamilyIndices queueFamilies;
 
      std::unique_ptr<vk::raii::Queue> graphicsQueue;
+     std::unique_ptr<vk::raii::Queue> presentQueue;
 };

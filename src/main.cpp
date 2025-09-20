@@ -3,20 +3,20 @@
 #include "Renderer.h"
 #include "Window.h"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_raii.hpp"
 
 double deltaTime = 0.0f;
 std::chrono::time_point<std::chrono::system_clock> startFrame;
 
-auto rendererInfo = RendererInfo {
-    true,
-    { "VK_LAYER_KHRONOS_validation" }
-};
-
-auto renderer = Renderer(rendererInfo);
-
 int main() {
     physim::Window window(800, 600);
+
+    auto rendererInfo = RendererInfo {
+        true,
+        { "VK_LAYER_KHRONOS_validation" },
+        window.getWindow()
+    };
+
+    auto renderer = Renderer(rendererInfo);
 
     renderer.init();
 

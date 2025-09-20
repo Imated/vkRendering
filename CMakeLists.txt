@@ -80,5 +80,9 @@ target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURC
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_PROJECT_NAME}/libs/vulkan" "${CMAKE_PROJECT_NAME}/libs/vk_video")
 
 #target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE Vulkan::Vulkan)
-target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glfw glm)
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glfw glm Vulkan::Vulkan)
+
+target_compile_definitions(vkRenderer PRIVATE
+		VK_USE_PLATFORM_WIN32_KHR
+		VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
 

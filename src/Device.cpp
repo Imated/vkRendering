@@ -1,8 +1,10 @@
 ﻿#include "Device.h"
 
+#include <set>
+
 #include "misc/Logger.h"
 
-Device::Device(const vk::raii::Instance& instance) {
+Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface): surface(surface) {
     auto physicalDevices = vk::raii::PhysicalDevices(instance);
     if (physicalDevices.empty())
         ERR("Failed to get a physical device with Vulkan support!");
@@ -16,27 +18,35 @@ Device::Device(const vk::raii::Instance& instance) {
     if (physicalDevice == VK_NULL_HANDLE)
         ERR("Failed to find a suitable GPU!");
 
+
+
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+    std::set uniqueQueueFamilies = { queueFamilies.graphicsFamily.value(), queueFamilies.presentFamily.value() };
+
     auto queuePriority = 1.f;
+    for (uint32_t queueFamily : uniqueQueueFamilies) {
+        vk::DeviceQueueCreateInfo queueCreateInfo {
+            {},
+            queueFamily,
+            1,
+            &queuePriority
+        };
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
-    vk::DeviceQueueCreateInfo deviceQueueCreateInfo {
-        {},
-        queueFamilies.graphicsFamily.value(),
-        1,
-        &queuePriority
-    };
-
-    vk::PhysicalDeviceFeatures deviceFeatures { };
+    vk::PhysicalDeviceFeatures deviceFeatures{};
 
     vk::DeviceCreateInfo deviceCreateInfo {
         {},
-        1,
-        &deviceQueueCreateInfo
+        static_cast<uint32_t>(queueCreateInfos.size()),
+        queueCreateInfos.data(),
     };
 
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
     logicalDevice = std::make_unique<vk::raii::Device>(*physicalDevice, deviceCreateInfo);
 
     graphicsQueue = std::make_unique<vk::raii::Queue>(*logicalDevice, queueFamilies.graphicsFamily.value(), 0);
+    presentQueue = std::make_unique<vk::raii::Queue>(*logicalDevice, queueFamilies.presentFamily.value(), 0);
 }
 
 bool Device::isDeviceSuitable(const vk::raii::PhysicalDevice& device) {
@@ -54,6 +64,8 @@ void Device::findQueueFamilyIndices(const vk::raii::PhysicalDevice& device) {
     for (int i = 0; i < static_cast<int>(families.size()); ++i) {
         if (auto family = families[i]; family.queueFlags & vk::QueueFlagBits::eGraphics)
             queueFamilies.graphicsFamily = i;
+        if (device.getSurfaceSupportKHR(i, surface))
+            queueFamilies.presentFamily = i;
         if (queueFamilies.isComplete())
             break;
     }

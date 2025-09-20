@@ -1,5 +1,4 @@
-﻿#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#include "Renderer.h"
+﻿#include "Renderer.h"
 #include "GLFW/glfw3.h"
 #include "misc/Logger.h"
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -32,7 +31,16 @@ Renderer::Renderer(RendererInfo& info): info(info) {
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance);
 
-    device = std::make_unique<Device>(*instance);
+    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo;
+    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surfaceCreateInfo.hwnd = glfwGetWin32Window(info.window);
+    surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+
+    VkSurfaceKHR raw = VK_NULL_HANDLE;
+    glfwCreateWindowSurface(**instance, info.window, nullptr, &raw);
+
+    surface = std::make_unique<vk::raii::SurfaceKHR>(*instance, raw);
+    device = std::make_unique<Device>(*instance, *surface);
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance, device->getDevice(), loader);
 }
