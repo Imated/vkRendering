@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Device.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
@@ -26,9 +27,11 @@ private:
     bool checkValidationLayerSupport() const;
     std::vector<const char*> getExtensions() const;
 
+
     RendererInfo& info;
 
     std::unique_ptr<vk::raii::Instance> instance;
     std::unique_ptr<vk::raii::Context> context;
     std::unique_ptr<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
+    std::unique_ptr<Device> device;
 };

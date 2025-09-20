@@ -13,12 +13,6 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     if (info.enableValidationLayers && !checkValidationLayerSupport())
         ERR("Failed to enable validation layer extensions!");
 
-    vk::ValidationFeaturesEXT validationFeatures { };
-    std::array features {
-        vk::ValidationFeatureEnableEXT::eBestPractices
-      };
-    validationFeatures.setEnabledValidationFeatures(features);
-
     vk::ApplicationInfo appInfo("Test", 1, "Custom", 1, vk::HeaderVersionComplete);
 
     vk::InstanceCreateInfo createInfo {
@@ -30,7 +24,7 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     };
 
     auto debugMessengerCreateInfo = getDebugMessengerInfo();
-    vk::StructureChain chained { createInfo, validationFeatures, debugMessengerCreateInfo };
+    vk::StructureChain chained { createInfo, debugMessengerCreateInfo };
 
     context = std::make_unique<vk::raii::Context>();
     instance = std::make_unique<vk::raii::Instance>(*context, chained.get<vk::InstanceCreateInfo>());
@@ -38,11 +32,7 @@ Renderer::Renderer(RendererInfo& info): info(info) {
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance);
 
-    auto availableExtensions = vk::enumerateInstanceExtensionProperties();
-    INFO("Available extensions:");
-    for (const auto& extension: availableExtensions) {
-        INFO("\t %s", extension);
-    }
+    device = std::make_unique<Device>(*instance);
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
