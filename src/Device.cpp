@@ -16,10 +16,13 @@ Device::Device(const vk::raii::Instance& instance) {
     if (physicalDevice == VK_NULL_HANDLE)
         ERR("Failed to find a suitable GPU!");
 
+    auto queuePriority = 1.f;
+
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo {
         {},
         queueFamilies.graphicsFamily.value(),
-        1
+        1,
+        &queuePriority
     };
 
     vk::PhysicalDeviceFeatures deviceFeatures { };
