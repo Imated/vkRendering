@@ -33,6 +33,8 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance);
 
     device = std::make_unique<Device>(*instance);
+
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(device->getDevice());
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
