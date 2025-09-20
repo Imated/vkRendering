@@ -3,12 +3,32 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
+struct RendererInfo {
+    bool enableValidationLayers;
+    const std::vector<const char*>& validationLayers;
+};
+
 class Renderer {
 public:
-    Renderer();
+    Renderer(RendererInfo& info);
     ~Renderer();
     void init();
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+        vk::DebugUtilsMessageTypeFlagsEXT type,
+        const vk::DebugUtilsMessengerCallbackDataEXT *callbackData,
+        void *userData
+    );
 private:
+    vk::DebugUtilsMessengerCreateInfoEXT getDebugMessengerInfo();
+
+    bool checkValidationLayerSupport() const;
+    std::vector<const char*> getExtensions() const;
+
+    RendererInfo& info;
+
     std::unique_ptr<vk::raii::Instance> instance;
     std::unique_ptr<vk::raii::Context> context;
+    std::unique_ptr<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
 };

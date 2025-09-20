@@ -8,7 +8,12 @@
 double deltaTime = 0.0f;
 std::chrono::time_point<std::chrono::system_clock> startFrame;
 
-auto renderer = Renderer();
+auto rendererInfo = RendererInfo {
+    true,
+    { "VK_LAYER_KHRONOS_validation" }
+};
+
+auto renderer = Renderer(rendererInfo);
 
 int main() {
     physim::Window window(800, 600);
