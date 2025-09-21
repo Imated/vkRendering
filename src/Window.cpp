@@ -1,76 +1,79 @@
 ﻿#include "Window.h"
 
-namespace physim {
-    static void windowSizeCallback(GLFWwindow* window, int width, int height);
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void errorCallback(int error, const char* description);
+static void windowSizeCallback(GLFWwindow *window, int width, int height);
 
-    Window::Window(int width, int height, const std::string& title, bool fullscreen) {
-        INFO("Initializing...");
+static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-        glfwSetErrorCallback(errorCallback);
+static void errorCallback(int error, const char *description);
 
-        if (glfwInit() == GLFW_FALSE) {
-            ASSERT("Failed to initialize GLFW! Aborting...");
-            return;
-        }
+Window::Window(int width, int height, const std::string &title, bool fullscreen): width(width), height(height) {
+    glfwSetErrorCallback(errorCallback);
 
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
-        glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-        width = fullscreen ? mode->width : width;
-        height = fullscreen ? mode->height : height;
-        window = glfwCreateWindow(width, height, title.c_str(), fullscreen ? monitor : nullptr, nullptr);
-        if (!window) {
-            ASSERT("Failed to create window! Aborting...");
-            glfwTerminate();
-            return;
-        }
-
-        DEBUG("Successfully Created Window.");
-
-        glfwSetFramebufferSizeCallback(window, windowSizeCallback);
-        glfwSetKeyCallback(window, keyCallback);
-        DEBUG("Successfully Initialized GLFW.");
-
-        //glfwMakeContextCurrent(window);
-
-        params.width = width;
-        params.height = height;
-        DEBUG("Successfully Fetched Window Size of: %d, %d", width, height);
-
-        INFO("Initialized Successfully.");
+    if (glfwInit() == GLFW_FALSE) {
+        ASSERT("[Window]: Failed to initialize GLFW! Aborting...");
+        return;
     }
+    DEBUG("[Window]: Successfully Initialized GLFW.");
 
-    Window::~Window() {
-        glfwDestroyWindow(window);
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    width = fullscreen ? mode->width : width;
+    height = fullscreen ? mode->height : height;
+    window = glfwCreateWindow(width, height, title.c_str(), fullscreen ? monitor : nullptr, nullptr);
+    if (!window) {
+        ASSERT("[Window]: Failed to create window! Aborting...");
         glfwTerminate();
+        return;
     }
+    DEBUG("[Window]: Successfully Created Window.");
 
-    static void windowSizeCallback(GLFWwindow* window, int width, int height) {
-        //glViewport(0, 0, width, height);
-        Window::params.width = width;
-        Window::params.height = height;
-    }
+    glfwSetFramebufferSizeCallback(window, windowSizeCallback);
+    glfwSetKeyCallback(window, keyCallback);
+}
 
-    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
+Window::~Window() {
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
 
-    static void errorCallback(int error, const char* description) {
-        ERR("GLFW Error %d: %s", error, description);
-    }
+void Window::shutdown() {
+    surface = {};
+}
 
-    GLFWwindow* Window::getWindow() const {
-        return window;
-    }
+void Window::createWindowSurface(vk::raii::Instance& instance) {
+    VkSurfaceKHR raw = VK_NULL_HANDLE;
+    glfwCreateWindowSurface(*instance, window, nullptr, &raw);
+
+    surface = std::make_unique<vk::raii::SurfaceKHR>(instance, raw);
+    DEBUG("[Window]: Successfully create window surface.");
+}
+
+static void windowSizeCallback(GLFWwindow* window, int width, int height) {
+    //glViewport(0, 0, width, height);
+}
+
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+static void errorCallback(int error, const char* description) {
+    ERR("GLFW Error %d: %s", error, description);
+}
+
+GLFWwindow& Window::getWindow() const {
+    return *window;
+}
+
+vk::raii::SurfaceKHR& Window::getSurface() const {
+    return *surface;
 }

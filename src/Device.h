@@ -20,8 +20,10 @@ public:
     vk::raii::Device& getDevice() const;
 
 private:
-    bool isDeviceSuitable(const vk::raii::PhysicalDevice &device);
+    bool isDeviceSuitable(const vk::raii::PhysicalDevice &device, const std::vector<const char*> &deviceExtensions);
     void findQueueFamilyIndices(const vk::raii::PhysicalDevice &device);
+
+    bool checkDeviceExtensionSupport(const vk::raii::PhysicalDevice& device, std::vector<const char*> deviceExtensions);
 
     std::unique_ptr<vk::raii::PhysicalDevice> physicalDevice;
     std::unique_ptr<vk::raii::Device> logicalDevice;

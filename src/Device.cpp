@@ -2,14 +2,20 @@
 
 #include <set>
 
+#include "SwapChain.h"
 #include "misc/Logger.h"
 
 Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface): surface(surface) {
     auto physicalDevices = vk::raii::PhysicalDevices(instance);
     if (physicalDevices.empty())
         ERR("Failed to get a physical device with Vulkan support!");
+
+    const std::vector deviceExtensions = {
+        vk::KHRSwapchainExtensionName
+    };
+
     for (auto device: physicalDevices) {
-        if (isDeviceSuitable(device)) {
+        if (isDeviceSuitable(device, deviceExtensions)) {
             physicalDevice = std::make_unique<vk::raii::PhysicalDevice>(device);
             break;
         }
@@ -17,8 +23,6 @@ Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface
 
     if (physicalDevice == VK_NULL_HANDLE)
         ERR("Failed to find a suitable GPU!");
-
-
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     std::set uniqueQueueFamilies = { queueFamilies.graphicsFamily.value(), queueFamilies.presentFamily.value() };
@@ -34,12 +38,14 @@ Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    vk::PhysicalDeviceFeatures deviceFeatures{};
+    vk::PhysicalDeviceFeatures deviceFeatures {};
 
     vk::DeviceCreateInfo deviceCreateInfo {
         {},
         static_cast<uint32_t>(queueCreateInfos.size()),
         queueCreateInfos.data(),
+        0, nullptr,
+        static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data()
     };
 
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
@@ -49,12 +55,22 @@ Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface
     presentQueue = std::make_unique<vk::raii::Queue>(*logicalDevice, queueFamilies.presentFamily.value(), 0);
 }
 
-bool Device::isDeviceSuitable(const vk::raii::PhysicalDevice& device) {
+bool Device::isDeviceSuitable(const vk::raii::PhysicalDevice& device, const std::vector<const char*>& deviceExtensions) {
     const auto properties = device.getProperties();
-    const auto features = device.getFeatures();
+    const auto extensionsSupported = checkDeviceExtensionSupport(device, deviceExtensions);
     findQueueFamilyIndices(device);
 
-    return properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && features.geometryShader && queueFamilies.isComplete();
+    bool swapChainAdequate = false;
+    if (extensionsSupported) {
+        const auto swapChainSupport = SwapChain::querySwapChainSupport(device, surface);
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    }
+
+    return properties.deviceType ==
+           vk::PhysicalDeviceType::eDiscreteGpu
+           && queueFamilies.isComplete()
+           && extensionsSupported
+           && swapChainAdequate;
     // discrete gpus are good and cool, geom shaders are needed to function, queue families needed to render shit and stuff
 }
 
@@ -69,6 +85,16 @@ void Device::findQueueFamilyIndices(const vk::raii::PhysicalDevice& device) {
         if (queueFamilies.isComplete())
             break;
     }
+}
+
+bool Device::checkDeviceExtensionSupport(const vk::raii::PhysicalDevice &device, std::vector<const char*> deviceExtensions) {
+    auto extensions = device.enumerateDeviceExtensionProperties();
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+    for (const auto& extension : extensions)
+        requiredExtensions.erase(extension.extensionName);
+
+    return requiredExtensions.empty();
 }
 
 vk::raii::PhysicalDevice& Device::getPhysicalDevice() const {
