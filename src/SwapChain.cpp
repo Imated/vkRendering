@@ -26,7 +26,7 @@ SwapChain::SwapChain(Device& device, Window& window) {
         extent,
         1,
         vk::ImageUsageFlagBits::eColorAttachment,
-        graphicsPresentSimilar ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,
+        graphicsPresentSimilar ? vk::SharingMode::eConcurrent : vk::SharingMode::eExclusive,
         graphicsPresentSimilar ? static_cast<uint32_t>(queueFamilies.getIndices().size()) : 0u,
         graphicsPresentSimilar ? std::vector(queueFamilies.getIndices().begin(), queueFamilies.getIndices().end()).data(): nullptr,
         capabilities.currentTransform,
