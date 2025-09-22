@@ -5,6 +5,7 @@
 #include "vulkan/vulkan_raii.hpp"
 #include <GLFW/glfw3.h>
 
+#include "SwapChain.h"
 #include "Window.h"
 
 struct RendererInfo {
@@ -38,4 +39,5 @@ private:
     std::unique_ptr<vk::raii::Context> context;
     std::unique_ptr<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
     std::unique_ptr<Device> device;
+    std::unique_ptr<SwapChain> swapChain;
 };

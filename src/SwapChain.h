@@ -24,4 +24,6 @@ private:
     static vk::Extent2D chooseExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow& window);
 
     std::unique_ptr<vk::raii::SwapchainKHR> swapChain;
+    std::vector<vk::Image> images;
+    std::vector<vk::ImageView> imageViews;
 };

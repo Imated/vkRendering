@@ -26,7 +26,7 @@ SwapChain::SwapChain(Device& device, Window& window) {
         extent,
         1,
         vk::ImageUsageFlagBits::eColorAttachment,
-       graphicsPresentSimilar ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,
+        graphicsPresentSimilar ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,
         graphicsPresentSimilar ? static_cast<uint32_t>(queueFamilies.getIndices().size()) : 0u,
         graphicsPresentSimilar ? std::vector(queueFamilies.getIndices().begin(), queueFamilies.getIndices().end()).data(): nullptr,
         capabilities.currentTransform,
@@ -37,6 +37,25 @@ SwapChain::SwapChain(Device& device, Window& window) {
     };
 
     swapChain = std::make_unique<vk::raii::SwapchainKHR>(device.getDevice(), createInfo);
+    images.resize(imageCount);
+    images = swapChain->getImages();
+
+    imageViews.resize(imageCount);
+    for (auto i = 0; i < images.size(); i++) {
+        vk::ImageViewCreateInfo viewCreateInfo {
+            {},
+            images[i],
+            vk::ImageViewType::e2D,
+            surfaceFormat.format,
+            { },
+            vk::ImageSubresourceRange {
+                vk::ImageAspectFlagBits::eColor,
+                0, 1, 0, 1
+            }
+        };
+
+        imageViews[i] = device.getDevice().createImageView(viewCreateInfo);
+    }
 }
 
 SwapChainSupportDetails SwapChain::querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface) {

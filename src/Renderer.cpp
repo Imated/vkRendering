@@ -34,6 +34,8 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     device = std::make_unique<Device>(*instance, info.window.getSurface());
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance, device->getDevice(), loader);
+
+    swapChain = std::make_unique<SwapChain>(*device, info.window);
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
@@ -43,9 +45,9 @@ vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
 
     constexpr vk::DebugUtilsMessageTypeFlagsEXT typeFlags =
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
-            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
 
     constexpr vk::DebugUtilsMessengerCreateInfoEXT createInfo {
             { },
