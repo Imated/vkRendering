@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <chrono>
 
+#include "Device.h"
 #include "Window.h"
 #include "GLFW/glfw3.h"
 #include "vulkan/vulkan.hpp"
@@ -14,12 +15,13 @@ struct SwapChainSupportDetails {
 
 class SwapChain {
 public:
-    SwapChain(vk::raii::PhysicalDevice& device, Window& window);
-
-    static SwapChainSupportDetails querySwapChainSupport(const vk::raii::PhysicalDevice &device, const vk::raii::SurfaceKHR &surface);
+    SwapChain(Device& device, Window& window);
+private:
+    static SwapChainSupportDetails querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface);
 
     static vk::SurfaceFormatKHR chooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
     static vk::PresentModeKHR choosePresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
     static vk::Extent2D chooseExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow& window);
-private:
+
+    std::unique_ptr<vk::raii::SwapchainKHR> swapChain;
 };

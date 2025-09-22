@@ -37,22 +37,23 @@ Renderer::Renderer(RendererInfo& info): info(info) {
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
-    vk::DebugUtilsMessageSeverityFlagsEXT severityFlags =
+    constexpr vk::DebugUtilsMessageSeverityFlagsEXT severityFlags =
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
 
-    vk::DebugUtilsMessageTypeFlagsEXT typeFlags =
+    constexpr vk::DebugUtilsMessageTypeFlagsEXT typeFlags =
             vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
             vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
 
-    vk::DebugUtilsMessengerCreateInfoEXT createInfo {
+    constexpr vk::DebugUtilsMessengerCreateInfoEXT createInfo {
             { },
             severityFlags,
             typeFlags,
             &debugCallback
         };
+
     return createInfo;
 }
 

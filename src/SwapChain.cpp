@@ -1,13 +1,42 @@
 ﻿#include "SwapChain.h"
 
+#include "Device.h"
 #include "GLFW/glfw3.h"
 
-SwapChain::SwapChain(vk::raii::PhysicalDevice& device, Window& window) {
-    auto [capabilities, formats, presentModes] = querySwapChainSupport(device, window.getSurface());
+SwapChain::SwapChain(Device& device, Window& window) {
+    auto [capabilities, formats, presentModes] = querySwapChainSupport(device.getPhysicalDevice(), window.getSurface());
 
     auto surfaceFormat = chooseSurfaceFormat(formats);
     auto presentMode = choosePresentMode(presentModes);
     auto extent = chooseExtent(capabilities, window.getWindow());
+
+    uint32_t imageCount = capabilities.minImageCount + 1;
+    if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+        imageCount = capabilities.maxImageCount;
+
+    auto queueFamilies = device.getQueueFamilies();
+    auto graphicsPresentSimilar = queueFamilies.graphicsFamily != queueFamilies.presentFamily;
+
+    vk::SwapchainCreateInfoKHR createInfo {
+        {},
+        window.getSurface(),
+        imageCount,
+        surfaceFormat.format,
+        surfaceFormat.colorSpace,
+        extent,
+        1,
+        vk::ImageUsageFlagBits::eColorAttachment,
+       graphicsPresentSimilar ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,
+        graphicsPresentSimilar ? static_cast<uint32_t>(queueFamilies.getIndices().size()) : 0u,
+        graphicsPresentSimilar ? std::vector(queueFamilies.getIndices().begin(), queueFamilies.getIndices().end()).data(): nullptr,
+        capabilities.currentTransform,
+        vk::CompositeAlphaFlagBitsKHR::eOpaque,
+        presentMode,
+        vk::True,
+        VK_NULL_HANDLE
+    };
+
+    swapChain = std::make_unique<vk::raii::SwapchainKHR>(device.getDevice(), createInfo);
 }
 
 SwapChainSupportDetails SwapChain::querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface) {

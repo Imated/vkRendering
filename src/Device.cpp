@@ -25,12 +25,11 @@ Device::Device(const vk::raii::Instance& instance, vk::raii::SurfaceKHR& surface
         ERR("Failed to find a suitable GPU!");
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-    std::set uniqueQueueFamilies = { queueFamilies.graphicsFamily.value(), queueFamilies.presentFamily.value() };
 
     auto queuePriority = 1.f;
-    for (uint32_t queueFamily : uniqueQueueFamilies) {
+    for (uint32_t queueFamily : queueFamilies.getIndices()) {
         vk::DeviceQueueCreateInfo queueCreateInfo {
-            {},
+            { },
             queueFamily,
             1,
             &queuePriority
@@ -103,4 +102,8 @@ vk::raii::PhysicalDevice& Device::getPhysicalDevice() const {
 
 vk::raii::Device& Device::getDevice() const {
     return *logicalDevice;
+}
+
+QueueFamilyIndices Device::getQueueFamilies() const {
+    return queueFamilies;
 }
