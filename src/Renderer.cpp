@@ -1,4 +1,6 @@
 ﻿#include "Renderer.h"
+
+#include "RenderPass.h"
 #include "misc/Logger.h"
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
@@ -11,8 +13,7 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     if (info.enableValidationLayers && !checkValidationLayerSupport())
         ERR("Failed to enable validation layer extensions!");
 
-    vk::ApplicationInfo appInfo("Test", 1, "Custom", 1, vk::HeaderVersionComplete);
-
+    vk::ApplicationInfo appInfo("Test", 1, "Custom", 1, VK_API_VERSION_1_3);
     vk::InstanceCreateInfo createInfo {
         { }, &appInfo,
         info.enableValidationLayers ? static_cast<uint32_t>(info.validationLayers.size()) : 0,
@@ -20,7 +21,6 @@ Renderer::Renderer(RendererInfo& info): info(info) {
         static_cast<uint32_t>(extensions.size()),
         extensions.data()
     };
-
     auto debugMessengerCreateInfo = getDebugMessengerInfo();
     vk::StructureChain chained { createInfo, debugMessengerCreateInfo };
 
@@ -36,6 +36,18 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     VULKAN_HPP_DEFAULT_DISPATCHER.init(**instance, device->getDevice(), loader);
 
     swapChain = std::make_unique<SwapChain>(*device, info.window);
+
+    vk::PipelineLayoutCreateInfo layoutCreateInfo {
+            {},
+            0, nullptr,
+            0, nullptr
+        };
+
+    layout = std::make_unique<vk::raii::PipelineLayout>(device->getDevice(), layoutCreateInfo);
+
+    renderPass = std::make_unique<RenderPass>(*device, *swapChain);
+    auto defaultShaderNames = Shader("resources/shaders/vert.spv", "resources/shaders/frag.spv");
+    defaultShader = std::make_unique<Pipeline>(*device, *swapChain, defaultShaderNames, *layout, *renderPass);
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {

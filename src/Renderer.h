@@ -5,6 +5,7 @@
 #include "vulkan/vulkan_raii.hpp"
 #include <GLFW/glfw3.h>
 
+#include "Pipeline.h"
 #include "SwapChain.h"
 #include "Window.h"
 
@@ -40,4 +41,7 @@ private:
     std::unique_ptr<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
     std::unique_ptr<Device> device;
     std::unique_ptr<SwapChain> swapChain;
+    std::unique_ptr<vk::raii::PipelineLayout> layout;
+    std::unique_ptr<RenderPass> renderPass;
+    std::unique_ptr<Pipeline> defaultShader;
 };

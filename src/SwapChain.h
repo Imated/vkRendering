@@ -18,6 +18,9 @@ public:
     SwapChain(Device& device, Window& window);
 
     static SwapChainSupportDetails querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface);
+
+    vk::Extent2D& getExtent();
+    vk::SurfaceFormatKHR& getFormat();
 private:
     static vk::SurfaceFormatKHR chooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
     static vk::PresentModeKHR choosePresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
@@ -25,5 +28,8 @@ private:
 
     std::unique_ptr<vk::raii::SwapchainKHR> swapChain;
     std::vector<vk::Image> images;
-    std::vector<vk::ImageView> imageViews;
+    std::vector<vk::raii::ImageView> imageViews;
+
+    vk::Extent2D extent;
+    vk::SurfaceFormatKHR format;
 };

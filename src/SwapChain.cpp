@@ -10,13 +10,15 @@ SwapChain::SwapChain(Device& device, Window& window) {
     auto presentMode = choosePresentMode(presentModes);
     auto extent = chooseExtent(capabilities, window.getWindow());
 
+    this->extent = extent;
+    this->format = surfaceFormat;
+
     uint32_t imageCount = capabilities.minImageCount + 1;
     if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
         imageCount = capabilities.maxImageCount;
 
     auto queueFamilies = device.getQueueFamilies();
     auto graphicsPresentSimilar = queueFamilies.graphicsFamily != queueFamilies.presentFamily;
-
     vk::SwapchainCreateInfoKHR createInfo {
         {},
         window.getSurface(),
@@ -35,19 +37,20 @@ SwapChain::SwapChain(Device& device, Window& window) {
         vk::True,
         VK_NULL_HANDLE
     };
-
+    return;
     swapChain = std::make_unique<vk::raii::SwapchainKHR>(device.getDevice(), createInfo);
+
     images.resize(imageCount);
     images = swapChain->getImages();
 
-    imageViews.resize(imageCount);
+    imageViews.reserve(imageCount);
     for (auto i = 0; i < images.size(); i++) {
         vk::ImageViewCreateInfo viewCreateInfo {
             {},
             images[i],
             vk::ImageViewType::e2D,
             surfaceFormat.format,
-            { },
+            vk::ComponentSwizzle { },
             vk::ImageSubresourceRange {
                 vk::ImageAspectFlagBits::eColor,
                 0, 1, 0, 1
@@ -64,6 +67,14 @@ SwapChainSupportDetails SwapChain::querySwapChainSupport(const vk::raii::Physica
     details.formats = device.getSurfaceFormatsKHR(surface);
     details.presentModes = device.getSurfacePresentModesKHR(surface);
     return details;
+}
+
+vk::Extent2D & SwapChain::getExtent() {
+    return extent;
+}
+
+vk::SurfaceFormatKHR & SwapChain::getFormat() {
+    return format;
 }
 
 vk::SurfaceFormatKHR SwapChain::chooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
