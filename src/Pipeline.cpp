@@ -60,7 +60,7 @@ Pipeline::Pipeline(PipelineConfig& config, Device& device, vk::raii::PipelineLay
 
     vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo {
         {},
-        2, shaderStages.data(),
+        static_cast<uint32_t>(shaderStages.size()), shaderStages.data(),
         &vertexInputStateCreateInfo,
         &config.inputAssemblyInfo,
         nullptr,
