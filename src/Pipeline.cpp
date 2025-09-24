@@ -5,26 +5,26 @@
 #include "misc/FileHelper.h"
 #include "vulkan/vulkan.hpp"
 
-Pipeline::Pipeline(Device& device, SwapChain& swapChain, Shader& shader, vk::raii::PipelineLayout& layout, RenderPass& renderPass) {
+Pipeline::Pipeline(PipelineConfig& config, Device& device, vk::raii::PipelineLayout& layout, RenderPass& renderPass) {
 
-    const auto vertShaderCode = readFile(shader.vertexFilename);
-    const auto fragShaderCode = readFile(shader.fragmentFilename);
-    auto vertexShaderModule = createShaderModule(device.getDevice(), vertShaderCode);
-    auto fragmentShaderModule = createShaderModule(device.getDevice(), fragShaderCode);
+    const auto vertShaderCode = readFile(config.shader.vertexFilename);
+    const auto fragShaderCode = readFile(config.shader.fragmentFilename);
+    const auto vertexShaderModule = createShaderModule(device.getDevice(), vertShaderCode);
+    const auto fragmentShaderModule = createShaderModule(device.getDevice(), fragShaderCode);
 
-    std::vector shaderStages = {
+    std::vector shaderStages {
         vk::PipelineShaderStageCreateInfo{
-                {},
-                vk::ShaderStageFlagBits::eVertex,
-                *vertexShaderModule,
-                "main"
-            },
-            vk::PipelineShaderStageCreateInfo{
-                {},
-                vk::ShaderStageFlagBits::eFragment,
-                *fragmentShaderModule,
-                "main"
-            }
+            {},
+            vk::ShaderStageFlagBits::eVertex,
+            *vertexShaderModule,
+            "main"
+        },
+        vk::PipelineShaderStageCreateInfo {
+            {},
+            vk::ShaderStageFlagBits::eFragment,
+            *fragmentShaderModule,
+            "main"
+        }
     };
 
     std::vector dynamicStates = {
@@ -38,66 +38,15 @@ Pipeline::Pipeline(Device& device, SwapChain& swapChain, Shader& shader, vk::rai
         0, nullptr,
     };
 
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo {
         {},
-        vk::PrimitiveTopology::eTriangleList,
-        vk::False
+        static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()
     };
-
-    vk::Extent2D extent = swapChain.getExtent();
-
-    vk::Viewport viewport {
-        0.f, 0.f,
-        static_cast<float>(extent.width), static_cast<float>(extent.height),
-        0.f, 1.f
-    };
-
-    vk::Rect2D scissor {
-        { 0, 0 },
-        extent
-    };
-
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo({}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data());
 
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {
         {},
-        1, &viewport,
-        1, &scissor
-    };
-
-    vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo {
-        {},
-        vk::False,
-        vk::False,
-        vk::PolygonMode::eFill,
-        vk::CullModeFlagBits::eBack,
-        vk::FrontFace::eClockwise,
-        vk::False,
-        0.f,
-        0.f,
-        0.f,
-        1.f
-    };
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {
-        {},
-        vk::SampleCountFlagBits::e1,
-        vk::False,
-        1.f,
-        nullptr,
-        vk::False,
-        vk::False
-    };
-
-    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {
-        vk::True,
-        vk::BlendFactor::eSrcAlpha,
-        vk::BlendFactor::eOneMinusSrcAlpha,
-        vk::BlendOp::eAdd,
-        vk::BlendFactor::eOne,
-        vk::BlendFactor::eZero,
-        vk::BlendOp::eAdd,
-        vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
+        1, &config.viewport,
+        1, &config.scissor
     };
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {
@@ -105,7 +54,7 @@ Pipeline::Pipeline(Device& device, SwapChain& swapChain, Shader& shader, vk::rai
         vk::False,
         vk::LogicOp::eCopy,
         1,
-        &colorBlendAttachmentState,
+        &config.colorBlendAttachmentState,
         { 0.f, 0.f, 0.f, 0.f }
     };
 
@@ -113,11 +62,11 @@ Pipeline::Pipeline(Device& device, SwapChain& swapChain, Shader& shader, vk::rai
         {},
         2, shaderStages.data(),
         &vertexInputStateCreateInfo,
-        &inputAssemblyStateCreateInfo,
+        &config.inputAssemblyInfo,
         nullptr,
         &viewportStateCreateInfo,
-        &rasterizerStateCreateInfo,
-        &multisampleStateCreateInfo,
+        &config.rasterizerInfo,
+        &config.multisampleInfo,
         nullptr,
         &colorBlendStateCreateInfo,
         &dynamicStateCreateInfo,

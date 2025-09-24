@@ -28,7 +28,7 @@ public:
         void *userData
     );
 private:
-    vk::DebugUtilsMessengerCreateInfoEXT getDebugMessengerInfo();
+    static vk::DebugUtilsMessengerCreateInfoEXT getDebugMessengerInfo();
 
     bool checkValidationLayerSupport() const;
     std::vector<const char*> getExtensions() const;

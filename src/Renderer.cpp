@@ -46,8 +46,31 @@ Renderer::Renderer(RendererInfo& info): info(info) {
     layout = std::make_unique<vk::raii::PipelineLayout>(device->getDevice(), layoutCreateInfo);
 
     renderPass = std::make_unique<RenderPass>(*device, *swapChain);
+
     auto defaultShaderNames = Shader("resources/shaders/vert.spv", "resources/shaders/frag.spv");
-    defaultShader = std::make_unique<Pipeline>(*device, *swapChain, defaultShaderNames, *layout, *renderPass);
+
+    vk::Viewport viewport {
+        0.f, 0.f,
+        static_cast<float>(swapChain->getExtent().width), static_cast<float>(swapChain->getExtent().height),
+        0.f, 1.f
+    };
+
+    vk::Rect2D scissor {
+        {0, 0},
+        swapChain->getExtent(),
+    };
+
+    PipelineConfig config {
+        defaultShaderNames,
+        PipelineConfig::defaultInputAssemblyInfo,
+        PipelineConfig::defaultRasterizerInfo,
+        PipelineConfig::defaultMultisampleInfo,
+        PipelineConfig::defaultColorBlendAttachmentState,
+        viewport,
+        scissor,
+    };
+
+    defaultShader = std::make_unique<Pipeline>(config, *device, *layout, *renderPass);
 }
 
 vk::DebugUtilsMessengerCreateInfoEXT Renderer::getDebugMessengerInfo() {
